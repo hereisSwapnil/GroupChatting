@@ -45,7 +45,6 @@ const AddGroup = ({ setIsAddGroup }) => {
       });
   };
 
-  // Debounced function to search users
   const debouncedSearch = useCallback(
     debounce(async (term) => {
       if (!term) {

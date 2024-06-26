@@ -10,6 +10,7 @@ import axios from "axios";
 
 function App() {
   const [user, setUser] = useRecoilState(userAtom);
+
   useEffect(() => {
     axios
       .get(`${import.meta.env.VITE_BASE_API}/user`, {
@@ -18,12 +19,14 @@ function App() {
         },
       })
       .then((response) => {
+        console.log(response.data);
         setUser(response.data);
       })
       .catch((error) => {
         console.error(error);
       });
   }, []);
+
   return (
     <>
       <Routes>

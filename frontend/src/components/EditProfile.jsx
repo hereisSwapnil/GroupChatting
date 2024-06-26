@@ -4,6 +4,7 @@ import axios from "axios";
 import debounce from "lodash.debounce";
 import UserBadge from "./UserBadge";
 import { toast } from "react-toastify";
+import { useNavigate } from "react-router-dom";
 
 const EditProfile = ({ setEditingProfile }) => {
   const {
@@ -11,6 +12,8 @@ const EditProfile = ({ setEditingProfile }) => {
     handleSubmit,
     formState: { errors },
   } = useForm();
+
+  const navigate = useNavigate();
 
   const [members, setMembers] = useState([]);
   const [searchResults, setSearchResults] = useState([]);
@@ -161,6 +164,16 @@ const EditProfile = ({ setEditingProfile }) => {
           className="w-full rounded-md border border-gray-600 bg-gray-600 px-4 py-2 text-sm font-medium text-white hover:bg-black focus:outline-none"
         >
           Save
+        </button>
+        <button
+          onClick={() => {
+            toast.success("Logged out successfully");
+            localStorage.removeItem("token");
+            navigate("/login");
+          }}
+          className="w-full border hover:bg-red-700 bg-red-500 text-white px-4 py-2 rounded-md text-sm font-medium focus:outline-none"
+        >
+          Logout
         </button>
       </form>
     </div>
