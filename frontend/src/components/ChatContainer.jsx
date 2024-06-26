@@ -34,25 +34,25 @@ const ChatContainer = () => {
               _id={
                 chat.isGroupChat
                   ? chat._id
-                  : chat._id ||
-                    chat.users.find((user_) => user_._id !== user._id)._id
+                  : (chat.users &&
+                      chat.users.find((user_) => user_._id !== user._id)
+                        ?._id) ||
+                    chat._id
               }
               isChatCreated={
-                chat?.chatName
-                  ? chat.chatName === "sender"
-                    ? true
-                    : false
-                  : false
+                chat?.chatName ? chat.chatName !== "sender" : false
               }
               key={chat._id}
               name={
                 chat.isGroupChat
                   ? chat.chatName
-                  : chat.name ||
-                    chat.users.find((user_) => user_._id !== user._id).name
+                  : (chat.users &&
+                      chat.users.find((user_) => user_._id !== user._id)
+                        ?.name) ||
+                    chat?.name
               }
               chat={chat}
-              latestMessage={chat?.message}
+              latestMessage={chat?.latestMessage}
             />
           ))}
       </div>

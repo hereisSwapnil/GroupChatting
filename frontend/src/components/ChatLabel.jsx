@@ -10,13 +10,14 @@ const ChatLabel = ({ name, latestMessage, _id, isChatCreated, chat }) => {
 
   const handleSelectedChat = () => {
     setSelectedChat([]);
-    // if (isChatCreated && chat.chatName === "sender") {
-    //   _id = chat.users.map((user_) => {
-    //     if (user_._id !== user._id) {
-    //       return user_._id;
-    //     }
-    //   })[0];
-    // }
+    if (isChatCreated && chat.chatName === "sender") {
+      _id = chat.users.map((user_) => {
+        if (user_._id !== user._id) {
+          return user_._id;
+        }
+      })[0];
+    }
+    // console.log(chat);
     // console.log(_id, user._id);
     // console.log(chat.users.length);
     // return;
@@ -82,15 +83,16 @@ const ChatLabel = ({ name, latestMessage, _id, isChatCreated, chat }) => {
           />
         </a>
 
-        <div className="flex flex-col items-center align-middle">
+        <div className="flex flex-col items-start">
           <p className="text-sm font-semibold">
             {name?.length > 25 ? name.slice(0, 25) + "..." : name}
           </p>
 
           {latestMessage && (
-            <p className="text-sm text-gray-700">
-              <span className="font-semibold">
-                {latestMessage?.user?.name}:{" "}
+            <p className="text-sm font-light text-gray-700">
+              <span className="font-light text-sm">
+                <b>{latestMessage?.sender.name}</b>
+                {": "}
               </span>
               {latestMessage?.content.length > 20
                 ? latestMessage?.content.slice(0, 20) + "..."
