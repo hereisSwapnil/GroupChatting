@@ -10,14 +10,17 @@ const ChatLabel = ({ name, latestMessage, _id, isChatCreated, chat }) => {
 
   const handleSelectedChat = () => {
     setSelectedChat([]);
-    if (isChatCreated && chat.chatName === "sender") {
-      _id = chat.users.map((user_) => {
-        if (user_._id !== user._id) {
-          return user_._id;
-        }
-      })[0];
-    }
-    if (chat.users.length === 2) {
+    // if (isChatCreated && chat.chatName === "sender") {
+    //   _id = chat.users.map((user_) => {
+    //     if (user_._id !== user._id) {
+    //       return user_._id;
+    //     }
+    //   })[0];
+    // }
+    // console.log(_id, user._id);
+    // console.log(chat.users.length);
+    // return;
+    if (!chat.isGroupChat) {
       axios
         .post(
           `${import.meta.env.VITE_BASE_API}/chat`,
@@ -70,13 +73,10 @@ const ChatLabel = ({ name, latestMessage, _id, isChatCreated, chat }) => {
           <img
             alt=""
             src={
-              chat.users.length > 2
+              chat.isGroupChat
                 ? "https://static.vecteezy.com/system/resources/thumbnails/009/292/244/small/default-avatar-icon-of-social-media-user-vector.jpg"
-                : chat.users.map((user_) => {
-                    if (user_._id !== user._id) {
-                      return user_.profilePic;
-                    }
-                  })[0]
+                : chat.profilePic ||
+                  chat.users.find((user_) => user_._id !== user._id)?.profilePic
             }
             className="size-14 rounded-full object-cover"
           />

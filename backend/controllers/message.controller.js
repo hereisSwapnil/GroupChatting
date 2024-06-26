@@ -9,7 +9,7 @@ const sendMessage = async (req, res) => {
       return res.status(400).json({ message: "All fields are required" });
     }
     const chat = await Chat.findOne({
-      _id: chat,
+      _id: chatId,
     });
     if (!chat) {
       return res.status(400).json({ message: "Chat not found" });
