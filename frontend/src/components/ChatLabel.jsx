@@ -17,10 +17,7 @@ const ChatLabel = ({ name, latestMessage, _id, isChatCreated, chat }) => {
         }
       })[0];
     }
-    // console.log(chat);
-    // console.log(_id, user._id);
-    // console.log(chat.users.length);
-    // return;
+
     if (!chat.isGroupChat) {
       axios
         .post(
@@ -91,8 +88,9 @@ const ChatLabel = ({ name, latestMessage, _id, isChatCreated, chat }) => {
           {latestMessage && (
             <p className="text-sm font-light text-gray-700">
               <span className="font-light text-sm">
-                <b>{latestMessage?.sender.name}</b>
-                {": "}
+                <b>
+                  {chat.isGroupChat ? latestMessage?.sender.name + ": " : ""}
+                </b>
               </span>
               {latestMessage?.content.length > 20
                 ? latestMessage?.content.slice(0, 20) + "..."

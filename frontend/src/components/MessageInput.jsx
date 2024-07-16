@@ -1,9 +1,12 @@
 import axios from "axios";
 import React from "react";
 import { useForm } from "react-hook-form";
+import { selectedChatAtom } from "../recoil/atom/selectedChatAtom";
+import { useRecoilState } from "recoil";
 
 const MessageInput = ({ chatId }) => {
   const { register, handleSubmit, reset } = useForm();
+  const [selectedChat, setSelectedChat] = useRecoilState(selectedChatAtom);
 
   const onSubmit = async (data) => {
     axios
@@ -21,6 +24,14 @@ const MessageInput = ({ chatId }) => {
       )
       .then((response) => {
         console.log(response.data);
+        console.log(selectedChat);
+        // setSelectedChat([
+        //   ...selectedChat,
+        //   {
+        //     content: data.message,
+        //     chatId,
+        //   },
+        // ]);
         reset();
       })
       .catch((error) => {

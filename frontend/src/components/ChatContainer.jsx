@@ -29,32 +29,34 @@ const ChatContainer = () => {
         </div>
         <Search />
         {chats &&
-          chats.map((chat) => (
-            <ChatLabel
-              _id={
-                chat.isGroupChat
-                  ? chat._id
-                  : (chat.users &&
-                      chat.users.find((user_) => user_._id !== user._id)
-                        ?._id) ||
-                    chat._id
-              }
-              isChatCreated={
-                chat?.chatName ? chat.chatName !== "sender" : false
-              }
-              key={chat._id}
-              name={
-                chat.isGroupChat
-                  ? chat.chatName
-                  : (chat.users &&
-                      chat.users.find((user_) => user_._id !== user._id)
-                        ?.name) ||
-                    chat?.name
-              }
-              chat={chat}
-              latestMessage={chat?.latestMessage}
-            />
-          ))}
+          chats
+            .filter((chat) => chat?.latestMessage)
+            .map((chat) => (
+              <ChatLabel
+                _id={
+                  chat.isGroupChat
+                    ? chat._id
+                    : (chat.users &&
+                        chat.users.find((user_) => user_._id !== user._id)
+                          ?._id) ||
+                      chat._id
+                }
+                isChatCreated={
+                  chat?.chatName ? chat.chatName !== "sender" : false
+                }
+                key={chat._id}
+                name={
+                  chat.isGroupChat
+                    ? chat.chatName
+                    : (chat.users &&
+                        chat.users.find((user_) => user_._id !== user._id)
+                          ?.name) ||
+                      chat?.name
+                }
+                chat={chat}
+                latestMessage={chat?.latestMessage}
+              />
+            ))}
       </div>
       <div className="w-[70%] flex flex-col rounded-md bg-gray-100">
         {editingProfile && (
