@@ -1,5 +1,5 @@
 import axios from "axios";
-import React, { useEffect, useCallback, useRef } from "react";
+import React, { useEffect, useCallback, useRef, useState } from "react";
 import { useRecoilState, useRecoilValue } from "recoil";
 import { toast } from "react-toastify";
 import { chatsAtom } from "../recoil/atom/chatsAtom";
@@ -8,11 +8,13 @@ import ChatContainer from "../components/ChatContainer";
 import { userAtom } from "../recoil/atom/userAtom";
 import Loading from "../components/Loading";
 
-const Chats = () => {
+const Chats = ({ socket }) => {
   const [chats, setChats] = useRecoilState(chatsAtom);
   const user = useRecoilValue(userAtom);
   const navigate = useNavigate();
   const hasShownLoginError = useRef(false);
+  const [messages, setMessages] = useState([]);
+  const [input, setInput] = useState("");
 
   const fetchChats = useCallback(async () => {
     try {
@@ -68,7 +70,7 @@ const Chats = () => {
       {user?.email}
       <br />
       <button onClick={handleLogout}>logout</button>
-      <ChatContainer />
+      <ChatContainer socket={socket} />
     </div>
   );
 };

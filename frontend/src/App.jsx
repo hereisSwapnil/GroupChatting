@@ -7,9 +7,17 @@ import { useEffect } from "react";
 import { useRecoilState } from "recoil";
 import { userAtom } from "./recoil/atom/userAtom";
 import axios from "axios";
+import { io } from "socket.io-client";
+
 
 function App() {
   const [user, setUser] = useRecoilState(userAtom);
+
+  const socket = io(import.meta.env.VITE_BASE_API_SOCKET, {
+    withCredentials: true,
+    autoConnect: true,
+    transports: ["websocket", "polling"],
+  });
 
   useEffect(() => {
     axios
@@ -31,7 +39,7 @@ function App() {
     <>
       <Routes>
         <Route path="/" element={<Home />} />
-        <Route path="/chats" element={<Chats />} />
+        <Route path="/chats" element={<Chats socket={socket} />} />
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<SignUp />} />
       </Routes>

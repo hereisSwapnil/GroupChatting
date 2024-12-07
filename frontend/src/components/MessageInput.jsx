@@ -1,16 +1,47 @@
 import axios from "axios";
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { selectedChatAtom } from "../recoil/atom/selectedChatAtom";
-import { useRecoilState } from "recoil";
+import { useRecoilValue } from "recoil";
+import { userAtom } from "../recoil/atom/userAtom";
 
-const MessageInput = ({ chatId }) => {
-  const { register, handleSubmit, reset } = useForm();
-  const [selectedChat, setSelectedChat] = useRecoilState(selectedChatAtom);
+const MessageInput = ({ chatId, socket, setMessages }) => {
+  const { register, handleSubmit, reset, watch } = useForm();
+  const selectedChat = useRecoilValue(selectedChatAtom);
+  const user = useRecoilValue(userAtom);
+  const [typing, setTyping] = useState(false);
+  const [typingTimeout, setTypingTimeout] = useState(null);
+  const [otherTyping, setOtherTyping] = useState(null);
+
+  const messageContent = watch("message");
+
+  useEffect(() => {
+    if (messageContent && !typing) {
+      setTyping(true);
+      socket.emit("typing", { chatId: selectedChat._id, userId: user._id, user_image: user.profilePic });
+    }
+
+    if (typingTimeout) clearTimeout(typingTimeout);
+
+    const timeout = setTimeout(() => {
+      if (typing) {
+        socket.emit("stopTyping", { chatId: selectedChat._id, userId: user._id,  user_image: user.profilePic });
+        setTyping(false);
+      }
+    }, 2000);
+
+    setTypingTimeout(timeout);
+
+    return () => {
+      if (typingTimeout) clearTimeout(typingTimeout);
+    };
+  }, [messageContent]);
 
   const onSubmit = async (data) => {
-    axios
-      .post(
+    if (!data.message.trim()) return;
+    
+    try {
+      const response = await axios.post(
         `${import.meta.env.VITE_BASE_API}/message`,
         {
           content: data.message,
@@ -21,23 +52,45 @@ const MessageInput = ({ chatId }) => {
             Authorization: `Bearer ${localStorage.getItem("token")}`,
           },
         }
-      )
-      .then((response) => {
-        console.log(response.data);
-        console.log(selectedChat);
-        // setSelectedChat([
-        //   ...selectedChat,
-        //   {
-        //     content: data.message,
-        //     chatId,
-        //   },
-        // ]);
-        reset();
-      })
-      .catch((error) => {
-        console.error(error);
-      });
+      );
+
+      const newMessage = {
+        ...response.data,
+        sender: {
+          _id: user._id,
+          name: user.name,
+          email: user.email,
+          profilePic: user.profilePic,
+          createdAt: user.createdAt,
+          updatedAt: user.updatedAt,
+          __v: user.__v
+        }
+      };
+      
+      setMessages(prev => [...prev, newMessage]);
+      
+      socket.emit("stopTyping", { chatId: selectedChat._id, userId: user._id,  user_image: user.profilePic });
+      socket.emit("newMessage", newMessage);
+      
+      reset();
+    } catch (error) {
+      console.error("Error sending message:", error);
+    }
   };
+
+  socket.on("typing", (data) => {
+    if (data.userId !== user._id && data.chatId === selectedChat._id) {
+      console.log("Typing...");
+      setOtherTyping(data.profilePic);
+    }
+  }
+  );
+  socket.on("stopTyping", (data) => {
+    if (data.userId !== user._id && data.chatId === selectedChat._id) {
+      console.log("Stopped typing...");
+      setOtherTyping(null);
+    }
+  });
 
   return (
     <div className="">
@@ -54,7 +107,14 @@ const MessageInput = ({ chatId }) => {
             {...register("message", { required: true })}
             className="w-full rounded-md border-gray-200 py-4 pe-10 shadow-sm sm:text-sm"
           />
-
+{
+        otherTyping && (
+          <div className="flex items-center space-x-2">
+            <div className="w-4 h-4 rounded-full bg-green-500 animate-bounce" />
+            <p className="text-sm text-gray-500">Typing...</p>
+          </div>
+        )
+      }
           <span className="absolute inset-y-0 end-0 grid w-10 place-content-center">
             <button type="submit" className="text-gray-600 hover:text-gray-700">
               <span className="sr-only">Send</span>

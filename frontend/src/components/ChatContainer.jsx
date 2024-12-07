@@ -7,7 +7,7 @@ import { chatsAtom } from "../recoil/atom/chatsAtom";
 import { userAtom } from "../recoil/atom/userAtom";
 import EditProfile from "./EditProfile";
 
-const ChatContainer = () => {
+const ChatContainer = ({socket}) => {
   const chats = useRecoilValue(chatsAtom);
   const user = useRecoilValue(userAtom);
 
@@ -58,11 +58,16 @@ const ChatContainer = () => {
               />
             ))}
       </div>
-      <div className="w-[70%] flex flex-col rounded-md bg-gray-100">
+      <div className="w-[70%] flex flex-col rounded-md bg-gray-100"
+        style={{
+        width: "63%",
+        height: "80vh"
+      }}
+      >
         {editingProfile && (
           <EditProfile setEditingProfile={setEditingProfile} />
         )}
-        <SelectedChat />
+        <SelectedChat socket={socket} />
       </div>
     </div>
   );
