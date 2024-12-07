@@ -4,5 +4,15 @@ export default {
   theme: {
     extend: {},
   },
-  plugins: [],
+  plugins: [
+    // Dynamically require the plugin
+    (() => {
+      try {
+        return require("@tailwindcss/forms");
+      } catch (e) {
+        console.error("Plugin not loaded:", e);
+        return null;
+      }
+    })(),
+  ].filter(Boolean), // Remove any `null` values
 };

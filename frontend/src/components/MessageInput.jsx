@@ -66,9 +66,7 @@ const MessageInput = ({ chatId, socket, setMessages }) => {
           __v: user.__v
         }
       };
-      
-      setMessages(prev => [...prev, newMessage]);
-      
+            
       socket.emit("stopTyping", { chatId: selectedChat._id, userId: user._id,  user_image: user.profilePic });
       socket.emit("newMessage", newMessage);
       
