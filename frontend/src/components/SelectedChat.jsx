@@ -15,11 +15,10 @@ const SelectedChat = () => {
 
   const [selectedChatMessages, setSelectedChatMessages] = useState([]);
 
-  console.log("SelectedChat ->  ", selectedChat.groupAdmin, user._id);
-
   useEffect(() => {
-    console.log("SelectedChat ->  ", selectedChat);
-    axios
+    if (selectedChat && selectedChat._id) {
+      console.log("SelectedChat ->  ", selectedChat);
+      axios
       .get(`${import.meta.env.VITE_BASE_API}/message/${selectedChat._id}/`, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem("token")}`,
@@ -27,11 +26,13 @@ const SelectedChat = () => {
       })
       .then((response) => {
         console.log(response.data);
+        setSelectedChatMessages([]);
         setSelectedChatMessages(response.data);
       })
       .catch((error) => {
         console.error(error);
       });
+    }
   }, [selectedChat]);
 
   if (selectedChat.length !== 0) {
