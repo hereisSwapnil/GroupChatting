@@ -5,7 +5,28 @@ const cors = require("cors");
 const methodOverride = require("method-override");
 
 const app = express();
-app.use(cors({ origin: process.env.ORIGIN, credentials: true }));
+
+// Allow multiple origins for CORS
+const allowedOrigins = [
+  process.env.ORIGIN,
+  // dev
+  'http://192.168.32.247:5173',
+  'http://localhost:5173'
+];
+
+app.use(cors({ 
+  origin: function (origin, callback) {
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+    
+    if (allowedOrigins.indexOf(origin) === -1) {
+      const msg = 'The CORS policy for this site does not allow access from the specified Origin.';
+      return callback(new Error(msg), false);
+    }
+    return callback(null, true);
+  },
+  credentials: true 
+}));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());

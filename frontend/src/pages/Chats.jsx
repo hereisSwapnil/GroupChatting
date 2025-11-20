@@ -33,14 +33,25 @@ const Chats = ({ socket }) => {
     }
   }, [setChats]);
 
+  // Fetch chats when user changes (on login/signup)
   useEffect(() => {
-    if (localStorage.getItem("token")) {
+    if (user && localStorage.getItem("token")) {
       fetchChats();
+    } else {
+      // Clear chats if no user
+      setChats([]);
     }
-  }, [fetchChats]);
+  }, [user, fetchChats, setChats]);
 
   const [notification, setNotification] = useRecoilState(notificationAtom);
   const selectedChat = useRecoilValue(selectedChatAtom);
+
+  // Clear notifications when user changes
+  useEffect(() => {
+    if (user) {
+      setNotification([]);
+    }
+  }, [user, setNotification]);
 
   useEffect(() => {
     if (!localStorage.getItem("token")) {
@@ -55,7 +66,7 @@ const Chats = ({ socket }) => {
   useEffect(() => {
     if (!socket) return;
 
-    const handleMessageChannel = (newMessage) => {
+    const handleMessageChannel = async (newMessage) => {
       // Only add to notifications if message is not for the currently selected chat
       if (!selectedChat || selectedChat._id !== newMessage.chat) {
         // Use functional update to avoid stale closure
@@ -68,12 +79,37 @@ const Chats = ({ socket }) => {
         
         // Update chats list to show latest message
         setChats(prevChats => {
+          // Check if chat exists
+          const chatExists = prevChats.some(chat => chat._id === newMessage.chat);
+          
+          if (!chatExists) {
+            // Chat doesn't exist, fetch it from backend
+            axios.get(
+              `${import.meta.env.VITE_BASE_API}/chat`,
+              {
+                headers: {
+                  Authorization: `Bearer ${localStorage.getItem("token")}`,
+                },
+              }
+            )
+            .then((response) => {
+              setChats(response.data);
+            })
+            .catch((error) => {
+              console.error("Error fetching chats:", error);
+            });
+            
+            return prevChats; // Return current chats while fetching
+          }
+          
+          // Chat exists, update it
           const updatedChats = prevChats.map(chat => {
             if (chat._id === newMessage.chat) {
               return { ...chat, latestMessage: newMessage };
             }
             return chat;
           });
+          
           // Move updated chat to top
           const chatToMove = updatedChats.find(c => c._id === newMessage.chat);
           const otherChats = updatedChats.filter(c => c._id !== newMessage.chat);
