@@ -1,18 +1,48 @@
+import tailwindForms from '@tailwindcss/forms';
+
 /** @type {import('tailwindcss').Config} */
 export default {
+  // Trigger rebuild
   content: ["./index.html", "./src/**/*.{js,ts,jsx,tsx}"],
   theme: {
-    extend: {},
+    extend: {
+      colors: {
+        primary: {
+          DEFAULT: '#6366f1', // Indigo 500
+          hover: '#4f46e5',   // Indigo 600
+          light: '#818cf8',   // Indigo 400
+        },
+        dark: {
+          DEFAULT: '#0f172a', // Slate 900
+          card: '#1e293b',    // Slate 800
+          lighter: '#334155', // Slate 700
+        },
+        accent: {
+          DEFAULT: '#8b5cf6', // Violet 500
+          hover: '#7c3aed',   // Violet 600
+        }
+      },
+      fontFamily: {
+        sans: ['Inter', 'sans-serif'],
+        heading: ['Outfit', 'sans-serif'],
+      },
+      animation: {
+        'fade-in': 'fadeIn 0.5s ease-out',
+        'slide-up': 'slideUp 0.5s ease-out',
+      },
+      keyframes: {
+        fadeIn: {
+          '0%': { opacity: '0' },
+          '100%': { opacity: '1' },
+        },
+        slideUp: {
+          '0%': { transform: 'translateY(20px)', opacity: '0' },
+          '100%': { transform: 'translateY(0)', opacity: '1' },
+        },
+      },
+    },
   },
   plugins: [
-    // Dynamically require the plugin
-    (() => {
-      try {
-        return require("@tailwindcss/forms");
-      } catch (e) {
-        console.error("Plugin not loaded:", e);
-        return null;
-      }
-    })(),
-  ].filter(Boolean), // Remove any `null` values
+    tailwindForms,
+  ],
 };

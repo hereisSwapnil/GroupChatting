@@ -1,12 +1,13 @@
 const User = require("../models/user.model");
 const jwt = require("jsonwebtoken");
 
+// Middleware to protect routes by verifying JWT token
 const protectRoute = async (req, res, next) => {
   try {
-    const token =
-      req.cookies.token ||
-      (req.headers.authorization && req.headers.authorization.split(" ")[1]);
-    // console.log(`Token: ${token}`);
+    const token = req.cookies.token || (req.headers.authorization && req.headers.authorization.split(" ")[1]);
+    if (!token) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     if (!decoded) {
       return res.status(401).json({ message: "Unauthorized" });
@@ -20,6 +21,9 @@ const protectRoute = async (req, res, next) => {
     }
   } catch (error) {
     console.log(`Error during user authentication: ${error.message}`);
+    if (error.name === "JsonWebTokenError" || error.name === "TokenExpiredError") {
+      return res.status(401).json({ message: "Invalid token" });
+    }
     res.status(500).json({ message: error.message });
   }
 };

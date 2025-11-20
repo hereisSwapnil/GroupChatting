@@ -69,18 +69,20 @@ const login = async (req, res) => {
   }
 };
 
+const escapeRegex = (text) => {
+  return text.replace(/[.*+?^${}()|[\\]\\\\]/g, "\\$&");
+};
+
 const searchUsers = async (req, res) => {
   const { query } = req.query;
-
   try {
     if (!query) {
       return res.status(400).json({ message: "Query parameter is required" });
     }
-
+    const safeQuery = escapeRegex(query);
     const users = await User.find({
-      name: { $regex: new RegExp(query, "i") },
+      name: { $regex: new RegExp(safeQuery, "i") },
     }).select("name email profilePic");
-
     res.status(200).json(users);
   } catch (error) {
     console.error(`Error during search user: ${error.message}`);

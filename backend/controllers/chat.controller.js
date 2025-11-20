@@ -92,8 +92,8 @@ const createGroupChat = async (req, res) => {
     if (!chatName || !users) {
       return res.status(400).json({ message: "All fields are required" });
     }
-    if (users.length < 2) {
-      return res.status(400).json({ message: "Add at least 2 users" });
+    if (users.length < 1) {
+      return res.status(400).json({ message: "Add at least 1 users" });
     }
     if (!users.includes(req.user._id.toString())) {
       users.push(req.user._id);

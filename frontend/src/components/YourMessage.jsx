@@ -1,19 +1,17 @@
-import React from "react";
+import { motion } from "framer-motion";
 
 const YourMessage = ({ message }) => {
   return (
-    <div className="col-start-1 col-end-8 p-3 rounded-lg">
-      <div className="flex flex-row-reverse items-center gap-[10px]">
-        {/* <img
-          alt=""
-          src="https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxzZWFyY2h8NHx8YXZhdGFyfGVufDB8fDB8fA%3D%3D&auto=format&fit=crop&w=800&q=60"
-          className="size-10 rounded-full object-cover"
-        /> */}
-        <div className="relative text-sm bg-white py-2 px-4 shadow rounded-xl max-w-[70%]">
-          <div>{message}</div>
-        </div>
+    <motion.div 
+      initial={{ opacity: 0, y: 20, scale: 0.9 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      transition={{ duration: 0.3, ease: "easeOut" }}
+      className="flex justify-end mb-4"
+    >
+      <div className="bg-indigo-500 text-white py-3 px-5 rounded-2xl rounded-tr-none shadow-lg shadow-indigo-500/20 max-w-[70%]">
+        <p className="text-sm leading-relaxed">{message}</p>
       </div>
-    </div>
+    </motion.div>
   );
 };
 

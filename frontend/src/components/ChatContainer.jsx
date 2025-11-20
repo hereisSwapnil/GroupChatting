@@ -6,66 +6,74 @@ import { useRecoilValue } from "recoil";
 import { chatsAtom } from "../recoil/atom/chatsAtom";
 import { userAtom } from "../recoil/atom/userAtom";
 import EditProfile from "./EditProfile";
+import { Settings, LogOut } from "lucide-react";
 
-const ChatContainer = ({socket}) => {
+const ChatContainer = ({ socket }) => {
   const chats = useRecoilValue(chatsAtom);
   const user = useRecoilValue(userAtom);
-
   const [editingProfile, setEditingProfile] = useState(false);
 
   return (
-    <div className="border-[1px] border-gray-500 flex flex-row m-auto bg-gray-100 shadow-lg w-[90vw] h-[80vh] rounded-md">
-      <div className="w-[30%] border-r-[1px] h-[79vh] overflow-auto">
-        <div className="flex flex-row-reverse justify-between align-middle items-center px-2 py-1 bg-white rounded-md">
-          <h1 className="font-semibold">GroupChatting.</h1>
-          <img
-            src={user?.profilePic}
-            alt=""
-            className="cursor-pointer size-14 rounded-full object-cover border-2 p-[1px] border-black outline-offset-2"
-            onClick={() => {
-              setEditingProfile(!editingProfile);
-            }}
-          />
-        </div>
-        <Search />
-        {chats &&
-          chats
-            .filter((chat) => chat?.latestMessage)
-            .map((chat) => (
-              <ChatLabel
-                _id={
-                  chat.isGroupChat
-                    ? chat._id
-                    : (chat.users &&
-                        chat.users.find((user_) => user_._id !== user._id)
-                          ?._id) ||
-                      chat._id
-                }
-                isChatCreated={
-                  chat?.chatName ? chat.chatName !== "sender" : false
-                }
-                key={chat._id}
-                name={
-                  chat.isGroupChat
-                    ? chat.chatName
-                    : (chat.users &&
-                        chat.users.find((user_) => user_._id !== user._id)
-                          ?.name) ||
-                      chat?.name
-                }
-                chat={chat}
-                latestMessage={chat?.latestMessage}
+    <div className="glass-card w-full h-full rounded-2xl flex overflow-hidden shadow-2xl border border-white/10">
+      {/* Sidebar */}
+      <div className="w-[350px] bg-dark-card/50 border-r border-white/5 flex flex-col">
+        {/* Sidebar Header */}
+        <div className="p-4 border-b border-white/5 flex justify-between items-center bg-dark/30">
+          <div className="flex items-center gap-3">
+            <div className="relative group cursor-pointer" onClick={() => setEditingProfile(true)}>
+              <img
+                src={user?.profilePic}
+                alt="Profile"
+                className="w-10 h-10 rounded-full object-cover border-2 border-primary/50 group-hover:border-primary transition-colors"
               />
-            ))}
+              <div className="absolute inset-0 bg-black/40 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                <Settings className="w-4 h-4 text-white" />
+              </div>
+            </div>
+            <div>
+              <h3 className="font-bold text-white leading-tight">{user?.name}</h3>
+              <p className="text-xs text-gray-400">Online</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Search */}
+        <div className="p-4">
+          <Search />
+        </div>
+
+        {/* Chat List */}
+        <div className="flex-1 overflow-y-auto custom-scrollbar">
+          {chats && chats.length > 0 ? (
+            chats.map((chat) => (
+              <ChatLabel
+                key={chat._id}
+                chat={chat}
+                currentUser={user}
+              />
+            ))
+          ) : (
+            <div className="p-8 text-center text-gray-500">
+              <p>No chats yet. Start a conversation!</p>
+            </div>
+          )}
+        </div>
       </div>
-      <div className="w-[70%] flex flex-col rounded-md bg-gray-100"
-        style={{
-        width: "63%",
-        height: "80vh"
-      }}
-      >
+
+      {/* Main Chat Area */}
+      <div className="flex-1 flex flex-col bg-dark/20 relative">
         {editingProfile && (
-          <EditProfile setEditingProfile={setEditingProfile} />
+          <div className="absolute inset-0 z-50 bg-dark/80 backdrop-blur-sm flex items-center justify-center p-4">
+            <div className="glass-card p-1 max-w-md w-full rounded-2xl relative">
+              <button 
+                onClick={() => setEditingProfile(false)}
+                className="absolute top-4 right-4 text-gray-400 hover:text-white"
+              >
+                ✕
+              </button>
+              <EditProfile setEditingProfile={setEditingProfile} />
+            </div>
+          </div>
         )}
         <SelectedChat socket={socket} />
       </div>

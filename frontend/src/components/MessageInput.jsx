@@ -4,6 +4,7 @@ import { useForm } from "react-hook-form";
 import { selectedChatAtom } from "../recoil/atom/selectedChatAtom";
 import { useRecoilValue } from "recoil";
 import { userAtom } from "../recoil/atom/userAtom";
+import { Send } from "lucide-react";
 
 const MessageInput = ({ chatId, socket, setMessages }) => {
   const { register, handleSubmit, reset, watch } = useForm();
@@ -56,6 +57,7 @@ const MessageInput = ({ chatId, socket, setMessages }) => {
 
       const newMessage = {
         ...response.data,
+        chat: chatId, // Ensure this is the string ID
         sender: {
           _id: user._id,
           name: user.name,
@@ -67,73 +69,78 @@ const MessageInput = ({ chatId, socket, setMessages }) => {
         }
       };
             
-      socket.emit("stopTyping", { chatId: selectedChat._id, userId: user._id,  user_image: user.profilePic });
-      socket.emit("newMessage", newMessage);
+      if (socket.connected) {
+        socket.emit("stopTyping", { chatId: selectedChat._id, userId: user._id,  user_image: user.profilePic });
+        socket.emit("newMessage", newMessage);
+      } else {
+        console.warn("Socket not connected, message sent via API but not broadcasted via socket");
+      }
       
+      // Optimistically update UI
+      setMessages((prev) => [...prev, newMessage]);
+      
+      // Play sent sound
+      new Audio("/sent.wav").play().catch(e => console.log("Audio play failed:", e));
+
       reset();
     } catch (error) {
       console.error("Error sending message:", error);
     }
   };
 
-  socket.on("typing", (data) => {
-    if (data.userId !== user._id && data.chatId === selectedChat._id) {
-      console.log("Typing...");
-      setOtherTyping(data.profilePic);
-    }
-  }
-  );
-  socket.on("stopTyping", (data) => {
-    if (data.userId !== user._id && data.chatId === selectedChat._id) {
-      console.log("Stopped typing...");
-      setOtherTyping(null);
-    }
-  });
+  useEffect(() => {
+    if (!socket) return;
+
+    const handleTyping = (data) => {
+      if (data.userId !== user._id && data.chatId === selectedChat._id) {
+        setOtherTyping(data.profilePic);
+      }
+    };
+
+    const handleStopTyping = (data) => {
+      if (data.userId !== user._id && data.chatId === selectedChat._id) {
+        setOtherTyping(null);
+      }
+    };
+
+    socket.on("typing", handleTyping);
+    socket.on("stopTyping", handleStopTyping);
+
+    return () => {
+      socket.off("typing", handleTyping);
+      socket.off("stopTyping", handleStopTyping);
+    };
+  }, [socket, selectedChat, user._id]);
 
   return (
-    <div className="">
-      <div className="relative">
-        <form onSubmit={handleSubmit(onSubmit)}>
-          <label htmlFor="message" className="sr-only">
-            Send
-          </label>
-
-          <input
-            type="text"
-            id="message"
-            placeholder="send something..."
-            {...register("message", { required: true })}
-            className="w-full rounded-md border-gray-200 py-4 pe-10 shadow-sm sm:text-sm"
-          />
-{
-        otherTyping && (
-          <div className="flex items-center space-x-2">
-            <div className="w-4 h-4 rounded-full bg-green-500 animate-bounce" />
-            <p className="text-sm text-gray-500">Typing...</p>
+    <div className="relative">
+      {otherTyping && (
+        <div className="absolute -top-8 left-0 flex items-center space-x-2 bg-dark/50 px-3 py-1 rounded-full backdrop-blur-sm">
+          <div className="flex space-x-1">
+            <div className="w-1.5 h-1.5 bg-primary rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+            <div className="w-1.5 h-1.5 bg-primary rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+            <div className="w-1.5 h-1.5 bg-primary rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
           </div>
-        )
-      }
-          <span className="absolute inset-y-0 end-0 grid w-10 place-content-center">
-            <button type="submit" className="text-gray-600 hover:text-gray-700">
-              <span className="sr-only">Send</span>
-              <svg
-                viewBox="0 0 24 24"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-4 w-4"
-              >
-                <path
-                  d="M11.5003 12H5.41872M5.24634 12.7972L4.24158 15.7986C3.69128 17.4424 3.41613 18.2643 3.61359 18.7704C3.78506 19.21 4.15335 19.5432 4.6078 19.6701C5.13111 19.8161 5.92151 19.4604 7.50231 18.7491L17.6367 14.1886C19.1797 13.4942 19.9512 13.1471 20.1896 12.6648C20.3968 12.2458 20.3968 11.7541 20.1896 11.3351C19.9512 10.8529 19.1797 10.5057 17.6367 9.81135L7.48483 5.24303C5.90879 4.53382 5.12078 4.17921 4.59799 4.32468C4.14397 4.45101 3.77572 4.78336 3.60365 5.22209C3.40551 5.72728 3.67772 6.54741 4.22215 8.18767L5.24829 11.2793C5.34179 11.561 5.38855 11.7019 5.407 11.8459C5.42338 11.9738 5.42321 12.1032 5.40651 12.231C5.38768 12.375 5.34057 12.5157 5.24634 12.7972Z"
-                  stroke="#000000"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
-            </button>
-          </span>
-        </form>
-      </div>
+          <p className="text-xs text-gray-300">Typing...</p>
+        </div>
+      )}
+
+      <form onSubmit={handleSubmit(onSubmit)} className="relative flex items-center gap-2">
+        <input
+          type="text"
+          placeholder="Type a message..."
+          autoComplete="off"
+          {...register("message")}
+          className="w-full bg-white/5 border border-white/10 rounded-xl py-3 pl-4 pr-12 text-white placeholder-gray-400 focus:outline-none focus:border-primary/50 focus:bg-white/10 transition-all"
+        />
+        
+        <button 
+          type="submit" 
+          className="absolute right-2 p-2 bg-primary hover:bg-primary-dark text-white rounded-lg transition-colors shadow-lg shadow-primary/25"
+        >
+          <Send className="w-4 h-4" />
+        </button>
+      </form>
     </div>
   );
 };

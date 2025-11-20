@@ -1,181 +1,76 @@
-import React, { useState, useCallback } from "react";
-import { useForm } from "react-hook-form";
-import axios from "axios";
-import debounce from "lodash.debounce";
-import UserBadge from "./UserBadge";
+import React from "react";
+import { useRecoilValue } from "recoil";
+import { userAtom } from "../recoil/atom/userAtom";
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
+import { X, LogOut, Mail, User } from "lucide-react";
 
 const EditProfile = ({ setEditingProfile }) => {
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-  } = useForm();
-
+  const user = useRecoilValue(userAtom);
   const navigate = useNavigate();
 
-  const [members, setMembers] = useState([]);
-  const [searchResults, setSearchResults] = useState([]);
-  const [searchTerm, setSearchTerm] = useState("");
-
-  const onSubmit = (data) => {
-    console.log("Group Data:", data);
-    const groupMembers = members.map((member) => member._id);
-    console.log("Group Members:", groupMembers);
-    axios
-      .post(
-        `${import.meta.env.VITE_BASE_API}/chat/group`,
-        {
-          chatName: data.groupName,
-          isGroupChat: true,
-          users: groupMembers,
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-        }
-      )
-      .then((response) => {
-        console.log(response.data);
-        setEditingProfile(false);
-        toast.success("Group created successfully");
-      })
-      .catch((error) => {
-        console.error(error);
-        toast.error("Error creating group");
-      });
-  };
-
-  // Debounced function to search users
-  const debouncedSearch = useCallback(
-    debounce(async (term) => {
-      if (!term) {
-        setSearchResults([]);
-        return;
-      }
-      try {
-        const response = await axios.get(
-          `${import.meta.env.VITE_BASE_API}/user/search`,
-          {
-            params: { query: term },
-            headers: {
-              Authorization: `Bearer ${localStorage.getItem("token")}`,
-            },
-          }
-        );
-        // Filter out already selected members
-        const filteredResults = response.data.filter(
-          (user) => !members.some((member) => member._id === user._id)
-        );
-        setSearchResults(filteredResults);
-      } catch (error) {
-        console.error(error);
-      }
-    }, 300),
-    [members]
-  );
-
-  const handleSearchChange = (event) => {
-    const { value } = event.target;
-    setSearchTerm(value);
-    debouncedSearch(value);
-  };
-
-  const handleAddMember = (user) => {
-    setMembers((prevMembers) => [...prevMembers, user]);
-    setSearchTerm("");
-    setSearchResults([]);
+  const handleLogout = () => {
+    toast.success("Logged out successfully");
+    localStorage.removeItem("token");
+    navigate("/login");
   };
 
   return (
-    <div className="z-20 absolute h-[79.5vh] w-[62.8vw] border border-gray-300 flex flex-col m-auto bg-white shadow-lg rounded-md p-6">
-      <div className="w-auto flex flex-row justify-between">
-        <h1 className="text-xl font-bold text-gray-800 mb-4">Your Profile</h1>
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          fill="none"
-          viewBox="0 0 24 24"
-          strokeWidth="1.5"
-          stroke="currentColor"
-          className="h-5 w-5 cursor-pointer"
+    <div className="absolute inset-0 z-50 flex items-center justify-center bg-dark/80 backdrop-blur-sm p-4">
+      <div className="glass-card w-full max-w-md p-8 rounded-2xl relative animate-fade-in flex flex-col items-center gap-6">
+        <button
           onClick={() => setEditingProfile(false)}
+          className="absolute top-4 right-4 text-gray-400 hover:text-white transition-colors"
         >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            d="M6 18L18 6M6 6l12 12"
-          />
-        </svg>
-      </div>
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-        <div>
-          <input
-            type="text"
-            placeholder="Group Name"
-            {...register("groupName", { required: true })}
-            className="w-full rounded-md border-gray-200 bg-white text-sm text-gray-700 shadow-sm p-2"
-          />
-          {errors.groupName && (
-            <p className="text-red-500 text-xs mt-1">Group Name is required</p>
-          )}
-        </div>
-
-        <div>
-          <input
-            type="text"
-            placeholder="Add Members"
-            value={searchTerm}
-            onChange={handleSearchChange}
-            className="w-full rounded-md border-gray-200 bg-white text-sm text-gray-700 shadow-sm p-2"
-          />
-          {errors.groupMembers && (
-            <p className="text-red-500 text-xs mt-1">Members are required</p>
-          )}
-        </div>
-
-        <div className="overflow-y-scroll">
-          {searchResults.map((user) => (
-            <div
-              key={user._id}
-              onClick={() => handleAddMember(user)}
-              className="cursor-pointer p-2 hover:bg-gray-200"
-            >
-              {user.name}
-            </div>
-          ))}
-        </div>
-
-        <div className="overflow-y-scroll">
-          {members.map((member, index) => (
-            <UserBadge
-              key={index}
-              name={member.name}
-              members={members}
-              setMembers={setMembers}
-              _id={member._id}
-            />
-          ))}
-        </div>
-
-        <button
-          type="submit"
-          className="w-full rounded-md border border-gray-600 bg-gray-600 px-4 py-2 text-sm font-medium text-white hover:bg-black focus:outline-none"
-        >
-          Save
+          <X className="w-6 h-6" />
         </button>
+
+        <div className="relative">
+          <div className="w-24 h-24 rounded-full p-1 bg-gradient-to-br from-primary to-accent">
+            <img
+              src={user.profilePic}
+              alt={user.name}
+              className="w-full h-full rounded-full object-cover border-4 border-dark-card"
+            />
+          </div>
+          <div className="absolute bottom-0 right-0 w-6 h-6 bg-green-500 rounded-full border-4 border-dark-card"></div>
+        </div>
+
+        <div className="text-center space-y-1">
+          <h2 className="text-2xl font-bold text-white">{user.name}</h2>
+          <p className="text-gray-400 text-sm">Active now</p>
+        </div>
+
+        <div className="w-full space-y-4">
+          <div className="p-4 bg-white/5 rounded-xl border border-white/5 flex items-center gap-4">
+            <div className="p-2 bg-primary/20 rounded-lg text-primary">
+              <User className="w-5 h-5" />
+            </div>
+            <div>
+              <p className="text-xs text-gray-400">Full Name</p>
+              <p className="text-white font-medium">{user.name}</p>
+            </div>
+          </div>
+
+          <div className="p-4 bg-white/5 rounded-xl border border-white/5 flex items-center gap-4">
+            <div className="p-2 bg-accent/20 rounded-lg text-accent">
+              <Mail className="w-5 h-5" />
+            </div>
+            <div>
+              <p className="text-xs text-gray-400">Email Address</p>
+              <p className="text-white font-medium">{user.email}</p>
+            </div>
+          </div>
+        </div>
+
         <button
-          onClick={() => {
-            toast.success("Logged out successfully");
-            localStorage.removeItem("token");
-            navigate("/login");
-          }}
-          className="w-full border hover:bg-red-700 bg-red-500 text-white px-4 py-2 rounded-md text-sm font-medium focus:outline-none"
+          onClick={handleLogout}
+          className="w-full py-3 px-4 bg-red-500/10 hover:bg-red-500/20 text-red-500 rounded-xl font-medium transition-colors flex items-center justify-center gap-2 border border-red-500/20"
         >
+          <LogOut className="w-5 h-5" />
           Logout
         </button>
-      </form>
+      </div>
     </div>
   );
 };

@@ -1,36 +1,21 @@
 import React from "react";
+import { X } from "lucide-react";
 
 const UserBadge = ({ name, members, setMembers, _id }) => {
   const handleRemoveUser = () => {
-    console.log(members);
     setMembers(members.filter((member) => member._id !== _id));
   };
+
   return (
-    <span className="inline-flex items-center justify-center rounded-full bg-purple-100 px-2.5 py-0.5 text-purple-700 my-[4px] mx-[2px]">
-      <p className="whitespace-nowrap text-sm">{name}</p>
-
+    <div className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-primary/20 border border-primary/20 text-primary text-sm font-medium transition-all hover:bg-primary/30 mr-2 mb-2">
+      <span>{name}</span>
       <button
-        className="-me-1 ms-1.5 inline-block rounded-full bg-purple-200 p-0.5 text-purple-700 transition hover:bg-purple-300"
         onClick={handleRemoveUser}
+        className="p-0.5 hover:bg-primary/20 rounded-full transition-colors"
       >
-        <span className="sr-only">Remove User</span>
-
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          fill="none"
-          viewBox="0 0 24 24"
-          strokeWidth="1.5"
-          stroke="currentColor"
-          className="h-3 w-3"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            d="M6 18L18 6M6 6l12 12"
-          />
-        </svg>
+        <X className="w-3 h-3" />
       </button>
-    </span>
+    </div>
   );
 };
 

@@ -1,17 +1,23 @@
-import React from "react";
+import { motion } from "framer-motion";
 
 const OtherMessage = ({ message, image, name }) => {
   return (
-    <div className="col-start-1 col-end-8 p-3 rounded-lg">
-      <div className="flex flex-row items-center gap-[10px]">
-        <img alt="" src={image} className="size-10 rounded-full object-cover" />
-
-        <div className="relative text-sm bg-white py-2 px-4 shadow rounded-xl max-w-[70%]">
-          <div className="text-xs mb-1 font-bold">{name}</div>
-          <div>{message}</div>
-        </div>
+    <motion.div 
+      initial={{ opacity: 0, y: 20, scale: 0.9 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      transition={{ duration: 0.3, ease: "easeOut" }}
+      className="flex items-end gap-3 mb-4"
+    >
+      <img 
+        alt={name} 
+        src={image} 
+        className="w-8 h-8 rounded-full object-cover border border-white/10" 
+      />
+      <div className="bg-white/10 text-gray-200 py-3 px-5 rounded-2xl rounded-bl-none border border-white/5 max-w-[70%]">
+        <p className="text-xs text-indigo-500 mb-1 font-medium">{name}</p>
+        <p className="text-sm leading-relaxed">{message}</p>
       </div>
-    </div>
+    </motion.div>
   );
 };
 

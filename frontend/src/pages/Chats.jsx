@@ -1,11 +1,13 @@
 import axios from "axios";
-import React, { useEffect, useCallback, useRef, useState } from "react";
+import React, { useEffect, useCallback, useRef } from "react";
 import { useRecoilState, useRecoilValue } from "recoil";
 import { toast } from "react-toastify";
 import { chatsAtom } from "../recoil/atom/chatsAtom";
 import { useNavigate } from "react-router-dom";
 import ChatContainer from "../components/ChatContainer";
 import { userAtom } from "../recoil/atom/userAtom";
+import { notificationAtom } from "../recoil/atom/notificationAtom";
+import { selectedChatAtom } from "../recoil/atom/selectedChatAtom";
 import Loading from "../components/Loading";
 
 const Chats = ({ socket }) => {
@@ -13,8 +15,6 @@ const Chats = ({ socket }) => {
   const user = useRecoilValue(userAtom);
   const navigate = useNavigate();
   const hasShownLoginError = useRef(false);
-  const [messages, setMessages] = useState([]);
-  const [input, setInput] = useState("");
 
   const fetchChats = useCallback(async () => {
     try {
@@ -27,8 +27,6 @@ const Chats = ({ socket }) => {
         }
       );
       setChats(response.data);
-      console.log(response.data);
-      console.log(chats);
     } catch (error) {
       console.error(error);
       toast.error("Error in loading chats");
@@ -41,6 +39,9 @@ const Chats = ({ socket }) => {
     }
   }, [fetchChats]);
 
+  const [notification, setNotification] = useRecoilState(notificationAtom);
+  const selectedChat = useRecoilValue(selectedChatAtom);
+
   useEffect(() => {
     if (!localStorage.getItem("token")) {
       if (!hasShownLoginError.current) {
@@ -51,26 +52,56 @@ const Chats = ({ socket }) => {
     }
   }, [navigate]);
 
-  const handleLogout = useCallback(() => {
-    localStorage.removeItem("token");
-    toast.success("Logged out successfully");
-    navigate("/login");
-  }, [navigate]);
-  if (user.length === 0) {
+  useEffect(() => {
+    if (!socket) return;
+
+    const handleMessageChannel = (newMessage) => {
+      // Only add to notifications if message is not for the currently selected chat
+      if (!selectedChat || selectedChat._id !== newMessage.chat) {
+        // Use functional update to avoid stale closure
+        setNotification(prevNotification => {
+          if (prevNotification.some(n => n._id === newMessage._id)) {
+            return prevNotification;
+          }
+          return [newMessage, ...prevNotification];
+        });
+        
+        // Update chats list to show latest message
+        setChats(prevChats => {
+          const updatedChats = prevChats.map(chat => {
+            if (chat._id === newMessage.chat) {
+              return { ...chat, latestMessage: newMessage };
+            }
+            return chat;
+          });
+          // Move updated chat to top
+          const chatToMove = updatedChats.find(c => c._id === newMessage.chat);
+          const otherChats = updatedChats.filter(c => c._id !== newMessage.chat);
+          return chatToMove ? [chatToMove, ...otherChats] : updatedChats;
+        });
+      }
+    };
+
+    socket.on("messageChannel", handleMessageChannel);
+
+    return () => {
+      socket.off("messageChannel", handleMessageChannel);
+    };
+  }, [socket, selectedChat, setNotification, setChats]);
+
+  if (!user) {
     return <Loading />;
   }
 
   return (
-    <div>
-      <h1>chats</h1>
-      {user?.name}
-      <br />
-      {user?._id}
-      <br />
-      {user?.email}
-      <br />
-      <button onClick={handleLogout}>logout</button>
-      <ChatContainer socket={socket} />
+    <div className="min-h-screen bg-dark relative overflow-hidden flex items-center justify-center p-4">
+      {/* Background Elements */}
+      <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-primary/20 rounded-full blur-[120px] pointer-events-none" />
+      <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-accent/20 rounded-full blur-[120px] pointer-events-none" />
+      
+      <div className="w-full max-w-[1600px] h-[90vh] relative z-10">
+        <ChatContainer socket={socket} />
+      </div>
     </div>
   );
 };

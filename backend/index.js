@@ -2,6 +2,7 @@ const connectDB = require("./db/index");
 const app = require("./app");
 const http = require("http");
 const { Server } = require("socket.io");
+const os = require("os");
 
 const server = http.createServer(app);
 
@@ -28,9 +29,14 @@ io.on("connection", (socket) => {
 
   socket.on("newMessage", (message) => {
     const chat = message.chat;
-    if (!chat) return;
+    if (!chat) {
+      console.log("newMessage received without chat ID:", message);
+      return;
+    }
     
+    console.log(`Broadcasting message to room: ${chat}`);
     io.to(chat).emit("messageReceived", message);
+    io.emit("messageChannel", message);
   });
 
   socket.on("typing", (data) => {
@@ -53,7 +59,29 @@ connectDB()
     const PORT = process.env.PORT || 8000;
     const HOST = '0.0.0.0';
     server.listen(PORT, HOST, () => {
-      console.log(`Server is running 🚀 on http://${HOST}:${PORT}`);
+      // Get network interfaces
+      const networkInterfaces = os.networkInterfaces();
+      const addresses = [];
+      
+      // Find IPv4 addresses
+      for (const interfaceName in networkInterfaces) {
+        for (const iface of networkInterfaces[interfaceName]) {
+          // Skip internal (loopback) and non-IPv4 addresses
+          if (iface.family === 'IPv4' && !iface.internal) {
+            addresses.push(iface.address);
+          }
+        }
+      }
+      
+      console.log(`\n🚀 Server is running on:\n`);
+      console.log(`  ➜ Local:    http://localhost:${PORT}`);
+      
+      if (addresses.length > 0) {
+        addresses.forEach(address => {
+          console.log(`  ➜ Network:  http://${address}:${PORT}`);
+        });
+      }
+      console.log('');
     });
   })
   .catch((error) => {
