@@ -32,6 +32,10 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use(methodOverride("_method"));
 
+// Ensure database connection before processing API requests
+const ensureDBConnection = require("./middlewares/dbConnection");
+app.use("/api", ensureDBConnection);
+
 app.get("/", (req, res) => {
   res.send("Server is running 🚀");
 });
